@@ -44,7 +44,7 @@ services:
       - "./certs:/etc/ssl/selfsigned:ro${VOLOPTS-}"
 
   omeroweb:
-    image: "openmicroscopy/omero-web-standalone:latest"
+    image: "openmicroscopy/omero-web-standalone:5.6"
     environment:
       OMEROHOST: omeroserver
       CONFIG_omero_web__check_version: "false"

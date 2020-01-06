@@ -1,4 +1,4 @@
-FROM openmicroscopy/omero-server:latest
+FROM openmicroscopy/omero-server:5.6
 MAINTAINER ome-devel@lists.openmicroscopy.org.uk
 
 RUN cd /opt/omero/server/ && \
