@@ -6,7 +6,7 @@ RUN cd /opt/omero/server/ && \
 
 USER root
 
-RUN pip install pytest
+RUN /opt/omero/server/venv3/bin/python -m pip install pytest
 
 USER omero-server
 

@@ -7,7 +7,7 @@ RUN cd /opt/omero/server/ && \
 USER root
 
 # OMERO.py plugins
-RUN pip install \
+RUN /opt/omero/server/venv3/bin/python -m pip install \
     omero-cli-render \
     omero-metadata
 
