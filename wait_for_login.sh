@@ -4,7 +4,7 @@ set -eu
 
 OMERO_USER=root
 OMERO_PASS=omero
-OMERO=/opt/omero/server/OMERO.server/bin/omero
+OMERO=/opt/omero/server/venv3/bin/omero
 
 # Wait up to 2 mins
 i=0
