@@ -1,5 +1,7 @@
 # OMERO.server websockets with SSL (docker-compose)
 
+[![Actions Status](https://github.com/ome/docker-example-omero-websockets/workflows/Build/badge.svg)](https://github.com/ome/docker-example-omero-websockets/actions)
+
 This is an example of running OMERO.server with websockets, Nginx, and SSL.
 
 You can connect to OMERO.server using the OMERO API in Python in the following ways:
