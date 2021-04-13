@@ -44,7 +44,9 @@ services:
       - "./certs:/etc/ssl/selfsigned:ro${VOLOPTS-}"
 
   omeroweb:
-    image: "openmicroscopy/omero-web-standalone:5.6"
+    # This container uses the tag for the latest web release of OMERO 5
+    # To upgrade to the next major release, increment the major version number
+    image: "openmicroscopy/omero-web-standalone:5"
     environment:
       OMEROHOST: omeroserver
       CONFIG_omero_web__check_version: "false"
