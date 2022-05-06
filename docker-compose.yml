@@ -5,35 +5,23 @@ services:
   database:
     image: "postgres:11"
     environment:
-      POSTGRES_USER: omero
-      POSTGRES_DB: omero
-      POSTGRES_PASSWORD: omero
+      POSTGRES_USER: sillylittleusername
+      POSTGRES_DB: omerodatabase1
+      POSTGRES_PASSWORD: laviolettefamilysecret
     networks:
       - omero
     volumes:
       - "database:/var/lib/postgresql/data"
 
   omeroserver:
-    build: ./server
+    build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
+    env_file:
+      - omeroserver.env
     environment:
       CONFIG_omero_db_host: database
-      CONFIG_omero_db_user: omero
-      CONFIG_omero_db_pass: omero
-      CONFIG_omero_db_name: omero
-      ROOTPASS: omero
-
-      CONFIG_omero_client_icetransports: ssl,wss
-
-      # Self-signed certificates are needed if you want to use secure
-      # websocket proxying between nginx and omero (Nginx can't use ADH).
-      # If you are connecting directly to OMERO.server wss this isn't
-      # needed since the clients are configured to use ADH.
-      CONFIG_omero_glacier2_IceSSL_Ciphers: ADH:HIGH
-      CONFIG_omero_glacier2_IceSSL_DefaultDir: /etc/ssl/selfsigned
-      CONFIG_omero_glacier2_IceSSL_CAs: cacert.pem
-      CONFIG_omero_glacier2_IceSSL_CertFile: server.p12
-      CONFIG_omero_glacier2_IceSSL_Password: secret
-
+      CONFIG_omero_db_user: "${POSTGRES_USER}"
+      CONFIG_omero_db_pass: "${POSTGRES_PASSWORD}"
+      CONFIG_omero_db_name: "${POSTGRES_DB}"
     networks:
       - omero
     ports:
@@ -46,11 +34,10 @@ services:
   omeroweb:
     # This container uses the tag for the latest web release of OMERO 5
     # To upgrade to the next major release, increment the major version number
-    image: "openmicroscopy/omero-web-standalone:5"
+    build: https://github.com/barrettMCW/docker-omero-webLLAB.git
     environment:
       OMEROHOST: omeroserver
       CONFIG_omero_web__check_version: "false"
-      CONFIG_omero_web_secure: "true"
     networks:
       - omero
     ports:
@@ -61,8 +48,8 @@ services:
     networks:
       - omero
     ports:
-      - "8080:80"
-      - "8443:443"
+      - "80:80"
+      - "443:443"
     volumes:
       - "./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro${VOLOPTS-}"
       - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro${VOLOPTS-}"
