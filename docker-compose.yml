@@ -14,7 +14,7 @@ services:
       - "database:/var/lib/postgresql/data"
 
   omeroserver:
-    build: ./server
+    build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
     environment:
       CONFIG_omero_db_host: database
       CONFIG_omero_db_user: omero
@@ -46,7 +46,7 @@ services:
   omeroweb:
     # This container uses the tag for the latest web release of OMERO 5
     # To upgrade to the next major release, increment the major version number
-    image: "openmicroscopy/omero-web-standalone:5"
+    build: https://github.com/barrettMCW/docker-omero-webLLAB.git
     environment:
       OMEROHOST: omeroserver
       CONFIG_omero_web__check_version: "false"
