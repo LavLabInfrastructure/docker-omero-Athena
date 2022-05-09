@@ -14,7 +14,7 @@ services:
       - "database:/var/lib/postgresql/data"
 
   omeroserver:
-    build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
+    image: openmicroscopy/omero-server
     environment:
       CONFIG_omero_db_host: database
       CONFIG_omero_db_user: omero
