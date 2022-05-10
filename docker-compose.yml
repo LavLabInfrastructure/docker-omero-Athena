@@ -34,9 +34,10 @@ services:
       - "4064:4064"
       - "4066:4066"
     volumes:
-      - "dataset:${DATA_PATH:-/dev/null}:/OMERO.data:ro"
+      #replace dev/null with path to sample pictures (and uncomment)
+      #- "dev/null:/dataset:ro"
       - "omero:/OMERO"
-      - "./certs:/etc/ssl/selfsigned:ro${VOLOPTS-}"
+      - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
 
   omeroweb:
     build: https://github.com/barrettMCW/docker-omero-webLLAB.git
