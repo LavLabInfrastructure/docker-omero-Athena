@@ -19,7 +19,7 @@ First pull the latest major versions of the containers:
 
 Generate self-signed certificates (only needs to be run the first time):
 
-    docker-compose -f docker-compose.icessl.yml -f docker-compose.yml run icessl
+    sudo docker-compose -f docker-compose.icessl.yml -f docker-compose.yml run icessl
 
 Run OMERO:
 
