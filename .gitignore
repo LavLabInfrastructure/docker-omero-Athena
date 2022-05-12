@@ -1,3 +1,4 @@
 certs/*
 omeroserver.env
 omeroweb.env
+testData
