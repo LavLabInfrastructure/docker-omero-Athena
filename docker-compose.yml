@@ -14,12 +14,17 @@ services:
       - "database:/var/lib/postgresql/data"
 
   omeroserver:
-    build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
+    build: ../docker-omero-serverLLAB
+    #build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
     env_file:
       - omeroserver.env
     environment:
       #password for root
       ROOTPASS: omero
+      #password for importer
+      IMPORTPASS: omero
+      #name of importer group should you have a dataset
+      IMPORTGROUP: lavioletteLab
       #name of postgres container
       CONFIG_omero_db_host: database
       #POSTGRES_USER
@@ -28,8 +33,6 @@ services:
       CONFIG_omero_db_pass: laviolettefamilysecret
       #POSTGRES_DB
       CONFIG_omero_db_name: omerodatabase1
-    links:
-      - "redis:cache"
     networks:
       - backend
       - frontend
@@ -37,8 +40,7 @@ services:
       - "4064:4064"
       - "4066:4066"
     volumes:
-      #replace dev/null with path to sample pictures (and uncomment)
-      #- "dev/null:/dataset:ro"
+      - "./testData:/OMERO/DropBox/importer:ro" #optional
       - "omero:/OMERO"
       - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
 
@@ -50,7 +52,7 @@ services:
     networks:
       - frontend
     ports:
-      - "4080:4080"
+      - "4080"
     volumes:
       - "static:/opt/omero/web/OMERO.web/var/static/"
 
@@ -70,6 +72,8 @@ services:
       - "./certs:/etc/nginx/ssl:ro${VOLOPTS-}"
   redis:
     image: redis:latest
+    networks:
+      - frontend
     ports:
       - "6379"
     volumes:
