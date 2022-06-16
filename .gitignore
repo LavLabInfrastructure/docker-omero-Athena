@@ -1,4 +1,5 @@
 certs/*
+dev/certs/*
 omeroserver.env
 omeroweb.env
-testData/*.tif*
+dev/testData/*.tif*

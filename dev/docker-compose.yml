@@ -1,0 +1,106 @@
+version: "3"
+services:
+
+  database:
+    image: "postgres:11"
+    environment:
+      POSTGRES_USER: sillylittleusername
+      POSTGRES_PASSWORD: laviolettefamilysecret
+      POSTGRES_DB: omerodatabase1
+    networks:
+      - backend
+    volumes:
+      - "database:/var/lib/postgresql/data"
+
+  omeroserver:
+    build: ../../docker-omero-serverLLAB
+    env_file: omeroserver.dev.env
+    environment:
+      #password for root
+      ROOTPASS: omero
+      #password for importer
+      IMPORTPASS: omero
+      #name of importer group should you have a dataset
+      IMPORTGROUP: lavioletteLab
+      #name of postgres container
+      CONFIG_omero_db_host: database
+      #POSTGRES_USER
+      CONFIG_omero_db_user: sillylittleusername
+      #POSTGRES_PASSWORD
+      CONFIG_omero_db_pass: laviolettefamilysecret
+      #POSTGRES_DB
+      CONFIG_omero_db_name: omerodatabase1
+    networks:
+      - backend
+      - frontend
+    ports:
+      - "4064:4064"
+      - "4066:4066"
+    volumes:
+      - "./testResults/pipeOut/BRAIN/:/database/BRAIN/importer/:ro" 
+      - "./testResults/pipeOut/PROSTATE/:/database/PROSTATE/importer/:ro"
+      - "omero:/OMERO"
+      - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
+
+  omeroweb:
+    build: ../../docker-omero-webLLAB
+    env_file: omeroweb.dev.env
+    environment:
+      OMEROHOST: omeroserver
+    networks:
+      - frontend
+    ports:
+      - "4080"
+    volumes:
+      - "static:/opt/omero/web/OMERO.web/var/static/"
+
+  nginx:
+    image: library/nginx:1.14
+    networks:
+      - frontend
+    depends_on:
+      - omeroserver
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
+      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro${VOLOPTS-}"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro${VOLOPTS-}"
+      - "./certs:/etc/nginx/ssl:ro${VOLOPTS-}"
+
+  redis:
+    image: redis:latest
+    networks:
+      - frontend
+    ports:
+      - "6379"
+    volumes:
+      - cache:/data
+
+  pipeline:
+    build: ../../docker-omero-histoqcLLAB
+    env_file: ../../docker-omero-histoqcLLAB/.env
+    volumes:
+      - "./testData/:/in/"
+      - "./testResults/archive/:/archive/"
+      - "./testResults/pipeOut/:/out/"
+      - "./testResults/fail:/fail/"
+    
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  #redis cache
+  cache:
+  #postgresdb
+  database:
+  #image binaries
+  omero:
+  #static web files in temp filesys
+  static:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
