@@ -79,8 +79,8 @@ services:
       - cache:/data
 
   pipeline:
-    build: ../../docker-omero-histoqcLLAB
-    env_file: ../../docker-omero-histoqcLLAB/.env
+    build: ../../HistoQCLLAB
+    env_file: ../../HistoQCLLAB/.env
     volumes:
       - "./testData/:/in/"
       - "./testResults/archive/:/archive/"
