@@ -1,3 +1,0 @@
-Bioformat images added before the first boot will be imported, images added while the server is running will be imported.
-BUT PICTURES ADDED AFTER INITIALIZATION AND WHILE THE SERVER IS OFF WILL NOT BE IMPORTED!
-Add the pictures while it is running, delete the OMERO.server volume and reinitialize the server, or manually import them after boot.

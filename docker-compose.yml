@@ -3,21 +3,23 @@ version: "3"
 services:
 
   database:
-    image: "postgres:11"
+    image: "postgres:14-alpine"
     environment:
       POSTGRES_USER: sillylittleusername
       POSTGRES_PASSWORD: laviolettefamilysecret
       POSTGRES_DB: omerodatabase1
+      POSTGRES_INITDB: /wal/
+      PGDATA: /data/
     networks:
       - backend
     volumes:
-      - "database:/var/lib/postgresql/data"
+      - "/DATA2/omeroZFS/postgre/data/:/data/"
+      - "/DATA2/omeroZFS/postgre/wal/:/wal/"
+      - "./pgzfs.conf:/etc/postgresql/postgresql.conf"
 
   omeroserver:
-    build: ../docker-omero-serverLLAB
-    #build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
-    env_file:
-      - omeroserver.env
+    build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
+    env_file: omeroserver.env
     environment:
       #password for root
       ROOTPASS: omero
@@ -40,13 +42,14 @@ services:
       - "4064:4064"
       - "4066:4066"
     volumes:
-      - "./testData:/OMERO/DropBox/importer:ro" #optional
-      - "omero:/OMERO"
+      - "/DATA2/omeroZFS/omeTIFF/BRAIN/:/database/BRAIN/:ro"
+      - "/DATA2/omeroZFS/omeTIFF/PROSTATE/:/database/PROSTATE/:ro"
+      - "/DATA2/omeroZFS/server/:/OMERO/"
       - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
 
   omeroweb:
-    #build: https://github.com/barrettMCW/docker-omero-webLLAB.git
-    build: ../docker-omero-webLLAB
+    build: https://github.com/barrettMCW/docker-omero-webLLAB.git
+    env_file: omeroweb.env
     environment:
       OMEROHOST: omeroserver
     networks:
@@ -69,26 +72,28 @@ services:
       - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
       - "./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro${VOLOPTS-}"
       - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro${VOLOPTS-}"
-      - "./certs:/etc/nginx/ssl:ro${VOLOPTS-}"
+      - "./certs/:/etc/nginx/ssl:ro${VOLOPTS-}"
   redis:
     image: redis:latest
     networks:
       - frontend
     ports:
       - "6379"
+
+  pipeline:
+    build: https://github.com/LavLabInfrastructure/HistoQCLLAB.git
+    env_file: histoqc.env
     volumes:
-      - cache:/data
+      - "/DATA2/in/BRAIN/:/in/BRAIN/"
+      - "/DATA2/in/PROSTATE/:/in/PROSTATE/"
+      - "/DATA2/omeroZFS/rawTiff/:/archive/"
+      - "/DATA2/omeroZFS/failed/:/fail/"
+
 networks:
   frontend:
   backend:
 
 volumes:
-  #redis cache
-  cache:
-  #postgresdb
-  database:
-  #image binaries
-  omero:
   #static web files in temp filesys
   static:
     driver_opts:

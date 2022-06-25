@@ -2,8 +2,7 @@ version: "3"
 services:
 
   database:
-    #image: "postgres:11"
-    build: ../../docker-omero-postgres
+    image: "postgres:14-alpine"
     environment:
       POSTGRES_USER: sillylittleusername
       POSTGRES_PASSWORD: laviolettefamilysecret
@@ -15,7 +14,7 @@ services:
     volumes:
       - "/DATA2/omeroZFS/postgre/data/:/data/"
       - "/DATA2/omeroZFS/postgre/wal/:/wal/"
-      - "./pgzfs.conf:/etc/postgresql/postgresql.conf"
+      - "./pgzfs.dev.conf:/etc/postgresql/postgresql.conf"
 
   omeroserver:
     build: ../../docker-omero-serverLLAB
@@ -42,9 +41,9 @@ services:
       - "4064:4064"
       - "4066:4066"
     volumes:
-      - "./testResults/pipeOut/BRAIN/:/database/BRAIN/importer/:ro" 
-      - "./testResults/pipeOut/PROSTATE/:/database/PROSTATE/importer/:ro"
-      - "omero:/OMERO"
+      - "/DATA2/omeroZFS/omeTIFF/BRAIN/:/database/BRAIN/:ro" 
+      - "/DATA2/omeroZFS/omeTIFF/PROSTATE/:/database/PROSTATE/:ro"
+      - "/DATA2/omeroZFS/server/:/OMERO"
       - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
 
   omeroweb:
@@ -80,8 +79,6 @@ services:
       - frontend
     ports:
       - "6379"
-    volumes:
-      - cache:/data
 
   pipeline:
     build: ../../HistoQCLLAB
@@ -89,7 +86,7 @@ services:
     volumes:
       - "./testData/:/in/"
       - "./testResults/archive/:/archive/"
-      - "./testResults/pipeOut/:/out/"
+      - "/DATA2/omeroZFS/omeTIFF/:/out/"
       - "./testResults/fail:/fail/"
     
 
@@ -98,12 +95,6 @@ networks:
   backend:
 
 volumes:
-  #redis cache
-  cache:
-  #postgresdb
-  database:
-  #image binaries
-  omero:
   #static web files in temp filesys
   static:
     driver_opts:
