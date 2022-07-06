@@ -2,6 +2,6 @@ certs/*
 dev/certs/*
 omeroserver.env
 omeroweb.env
-histoqc.env
+hqc.env
 dev/testData/*/
 dev/testResults/*
