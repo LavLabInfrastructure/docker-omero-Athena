@@ -3,5 +3,6 @@ dev/certs/*
 omeroserver.env
 omeroweb.env
 hqc.env
-dev/testData/*/
+pgzfs.conf
+dev/testData/*
 dev/testResults/*

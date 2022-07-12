@@ -82,7 +82,7 @@ services:
 
   pipeline:
     build: ../../HistoQCLLAB
-    env_file: histoqc.dev.env
+    env_file: hqc.dev.env
     volumes:
       - "./testData/:/in/"
       - "./testResults/archive/:/archive/"
