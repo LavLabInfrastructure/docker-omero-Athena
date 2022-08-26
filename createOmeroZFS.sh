@@ -19,23 +19,26 @@ sudo echo "CREATING ZFS FILESYSTEM FOR OMERO" || (echo "must be run as root" && 
 	# log bias? we don't have l2arc so idk if that even matters, maybe carve a section out of boot?
 zfs create -o xattr=sa -o compression=lz4 -o atime=off -o relatime=on -o primarycache=metadata $1/omeroZFS
 echo "created parent dataset"
-#give the permissions to omero-server
 
 # create set for ome.tiffs ##I REALLY want to try multi MB recordsizes
 zfs create -o recordsize=1M -o primarycache=all -o relatime=off $1/omeroZFS/omeTIFF
 echo "created ometiff dir"
 
 # create set for logs
-zfs create -o compression=gzip-1 -o primarycache=none $1/omeroZFS/logs
+zfs create -o compression=gzip-1 $1/omeroZFS/logs
 echo "created master log dir"
 mkdir /$1/omeroZFS/logs/server && chown -R 1000:997 /$1/omeroZFS/logs/server
 echo "made log dir for omero.server"
 mkdir /$1/omeroZFS/logs/postgres && chown -R 70:70 /$1/omeroZFS/logs/postgres
 echo "made log dir for postgres"
+mkdir /$1/omeroZFS/logs/web && chown -R 999:998 /$1/omeroZFS/logs/web
+echo "made log dir for omero.web"
+mkdir /$1/omeroZFS/logs/nginx && chown -R 101:101 /$1/omeroZFS/logs/nginx
+echo "made log dir for nginx"
 
 # create set for omero server data
 	#no idea on whats best here
-zfs create -o recordsize=8k $1/omeroZFS/server
+zfs create -o primarycache=all -o recordsize=8k $1/omeroZFS/server
 echo "created server dir"
 chown -R 1000:997 /$1/omeroZFS/server
 

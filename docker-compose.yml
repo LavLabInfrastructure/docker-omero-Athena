@@ -15,7 +15,8 @@ services:
     volumes:
       - "/DATA2/omeroZFS/postgre/data/:/data/"
       - "/DATA2/omeroZFS/postgre/wal/:/wal/"
-      - "./pgzfs.conf:/etc/postgresql/postgresql.conf"
+      - "./pgzfs.conf:/etc/postgresql/postgresql.conf:ro"
+      - "/DATA2/omeroZFS/logs/postgres/:/log/"
 
   omeroserver:
     build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
@@ -42,10 +43,10 @@ services:
       - "4064:4064"
       - "4066:4066"
     volumes:
-      - "/DATA2/omeroZFS/omeTIFF/BRAIN/:/database/BRAIN/:ro"
-      - "/DATA2/omeroZFS/omeTIFF/PROSTATE/:/database/PROSTATE/:ro"
       - "/DATA2/omeroZFS/server/:/OMERO/"
+      - "/DATA2/omeroZFS/omeTIFF/:/database/:ro"
       - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
+      - "/DATA2/omeroZFS/logs/server/:/opt/omero/server/OMERO.server/var/log/"
 
   omeroweb:
     build: https://github.com/barrettMCW/docker-omero-webLLAB.git
@@ -58,9 +59,10 @@ services:
       - "4080"
     volumes:
       - "static:/opt/omero/web/OMERO.web/var/static/"
+      - "/DATA2/omeroZFS/logs/web/:/opt/omero/web/OMERO.web/var/log/"
 
   nginx:
-    image: library/nginx:1.14
+    image: library/nginx:1.23-alpine
     networks:
       - frontend
     depends_on:
@@ -73,6 +75,7 @@ services:
       - "./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro${VOLOPTS-}"
       - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro${VOLOPTS-}"
       - "./certs/:/etc/nginx/ssl:ro${VOLOPTS-}"
+      - "/DATA2/omeroZFS/logs/nginx/:/var/log/nginx/"
   redis:
     image: redis:latest
     networks:
@@ -86,8 +89,11 @@ services:
     volumes:
       - "/DATA2/in/BRAIN/:/in/BRAIN/"
       - "/DATA2/in/PROSTATE/:/in/PROSTATE/"
+      - "/DATA2/in/OVERRIDE/:/in/OVERRIDE/"
+      - "/DATA2/omeroZFS/omeTIFF/:/out/"
       - "/DATA2/omeroZFS/rawTiff/:/archive/"
       - "/DATA2/omeroZFS/failed/:/fail/"
+      - "/DATA2/omeroZFS/logs/pipeline/:/log/"
 
 networks:
   frontend:
