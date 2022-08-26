@@ -7,13 +7,14 @@ services:
       POSTGRES_USER: sillylittleusername
       POSTGRES_PASSWORD: laviolettefamilysecret
       POSTGRES_DB: omerodatabase1
+      
       POSTGRES_INITDB_WALDIR: /wal/
       PGDATA: /data/
     networks:
       - backend
     volumes:
-      - "/DATA2/omeroZFS/postgre/data/:/data/"
-      - "/DATA2/omeroZFS/postgre/wal/:/wal/"
+    #   - "./DATA2/omeroZFS/postgre/data/:/data/"
+    #   - "./DATA2/omeroZFS/postgre/wal/:/wal/"
       - "./pgzfs.dev.conf:/etc/postgresql/postgresql.conf"
 
   omeroserver:
@@ -41,9 +42,9 @@ services:
       - "4064:4064"
       - "4066:4066"
     volumes:
-      - "/DATA2/omeroZFS/omeTIFF/BRAIN/:/database/BRAIN/:ro" 
-      - "/DATA2/omeroZFS/omeTIFF/PROSTATE/:/database/PROSTATE/:ro"
-      - "/DATA2/omeroZFS/server/:/OMERO"
+    #   - "./DATA2/omeroZFS/omeTIFF/BRAIN/:/database/BRAIN/:ro" 
+    #   - "./DATA2/omeroZFS/omeTIFF/PROSTATE/:/database/PROSTATE/:ro"
+    #   - "./DATA2/omeroZFS/server/:/OMERO"
       - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
 
   omeroweb:
@@ -86,7 +87,7 @@ services:
     volumes:
       - "./testData/:/in/"
       - "./testResults/archive/:/archive/"
-      - "/DATA2/omeroZFS/omeTIFF/:/out/"
+      - "./DATA2/omeroZFS/omeTIFF/:/out/"
       - "./testResults/fail:/fail/"
     
 
