@@ -32,6 +32,7 @@ services:
       - "./certs:/etc/nginx/ssl:ro${VOLOPTS-}"
 
   omeroserver:
+    #build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
     build: ../../docker-omero-serverLLAB
     env_file: omeroserver.dev.env
     environment:
