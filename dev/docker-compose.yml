@@ -18,7 +18,7 @@ services:
       - "./pgzfs.dev.conf:/etc/postgresql/postgresql.conf"
 
   nginx:
-    image: owasp/modsecurity-crs:nginx-alpine
+    image: nginx:alpine
     networks:
       - frontend
     depends_on:
@@ -28,7 +28,7 @@ services:
       - "443:443"
     volumes:
       - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
-      - "./nginx.dev.conf:/etc/nginx/templates/conf.d/default.conf.template:ro${VOLOPTS-}"
+      - "./nginx.dev.conf:/etc/nginx/nginx.conf:ro${VOLOPTS-}"
       - "./certs:/etc/nginx/ssl:ro${VOLOPTS-}"
 
   omeroserver:
