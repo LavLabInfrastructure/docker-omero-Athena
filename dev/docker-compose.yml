@@ -26,6 +26,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8080:8080"
     volumes:
       - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
       - "./nginx.dev.conf:/etc/nginx/nginx.conf:ro${VOLOPTS-}"
