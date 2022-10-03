@@ -13,14 +13,14 @@ services:
     networks:
       - backend
     volumes:
-      - "/DATA2/omeroZFS/postgre/data/:/data/"
-      - "/DATA2/omeroZFS/postgre/wal/:/wal/"
-      - "./pgzfs.conf:/etc/postgresql/postgresql.conf:ro"
-      - "/DATA2/omeroZFS/logs/postgres/:/log/"
+      - "./DATA2/omeroZFS/postgre/data/:/data/"
+      - "./DATA2/omeroZFS/postgre/wal/:/wal/"
+      - "./omero-conf/omero-db.conf:/etc/postgresql/postgresql.conf:ro"
+      - "./DATA2/omeroZFS/logs/postgres/:/log/"
 
   omeroserver:
     build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
-    env_file: omeroserver.env
+    env_file: ./omero-conf/omero-server.env
     environment:
       #password for root
       ROOTPASS: omero
@@ -43,14 +43,15 @@ services:
       - "4064:4064"
       - "4066:4066"
     volumes:
-      - "/DATA2/omeroZFS/server/:/OMERO/"
-      - "/DATA2/omeroZFS/omeTIFF/:/database/:ro"
+      - "./DATA2/omeroZFS/server/:/OMERO/"
+      - "./DATA2/omeroZFS/omeTIFF/:/database/:ro"
       - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
-      - "/DATA2/omeroZFS/logs/server/:/opt/omero/server/OMERO.server/var/log/"
+      - "./DATA2/omeroZFS/logs/server/:/opt/omero/server/OMERO.server/var/log/"
+      - "/var/run/docker.sock:/var/run/docker.sock"
 
   omeroweb:
     build: https://github.com/barrettMCW/docker-omero-webLLAB.git
-    env_file: omeroweb.env
+    env_file: ./omero-conf/omero-web.env
     environment:
       OMEROHOST: omeroserver
     networks:
@@ -59,7 +60,7 @@ services:
       - "4080"
     volumes:
       - "static:/opt/omero/web/OMERO.web/var/static/"
-      - "/DATA2/omeroZFS/logs/web/:/opt/omero/web/OMERO.web/var/log/"
+      - "./DATA2/omeroZFS/logs/web/:/opt/omero/web/OMERO.web/var/log/"
 
   nginx:
     image: owasp/modsecurity-crs:nginx-alpine
@@ -72,9 +73,8 @@ services:
       - "443:443"
     volumes:
       - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
-      - "./nginx.conf:/etc/nginx/default.conf:ro${VOLOPTS-}"
       - "./certs/:/etc/nginx/ssl:ro${VOLOPTS-}"
-      - "/DATA2/omeroZFS/logs/nginx/:/var/log/nginx/"
+      - "./DATA2/omeroZFS/logs/nginx/:/var/log/nginx/"
   redis:
     image: redis:latest
     networks:
@@ -84,22 +84,22 @@ services:
 
   pipeline:
     build: https://github.com/LavLabInfrastructure/HistoQCLLAB.git
-    env_file: histoqc.env
+    env_file: omero-conf/hqc.env
     volumes:
-      - "/DATA2/in/BRAIN/:/in/BRAIN/"
-      - "/DATA2/in/PROSTATE/:/in/PROSTATE/"
-      - "/DATA2/in/OVERRIDE/:/in/OVERRIDE/"
-      - "/DATA2/omeroZFS/omeTIFF/:/out/"
-      - "/DATA2/omeroZFS/rawTiff/:/archive/"
-      - "/DATA2/omeroZFS/failed/:/fail/"
-      - "/DATA2/omeroZFS/logs/pipeline/:/log/"
+      - "./DATA2/in/BRAIN/:/in/BRAIN/"
+      - "./DATA2/in/PROSTATE/:/in/PROSTATE/"
+      - "./DATA2/in/OVERRIDE/:/in/OVERRIDE/"
+      - "./DATA2/omeroZFS/omeTIFF/:/out/"
+      - "./DATA2/omeroZFS/rawTiff/:/archive/"
+      - "./DATA2/omeroZFS/failed/:/fail/"
+      - "./DATA2/omeroZFS/logs/pipeline/:/log/"
 
 networks:
   frontend:
   backend:
 
+#static web files in temp filesys
 volumes:
-  #static web files in temp filesys
   static:
     driver_opts:
       type: tmpfs
