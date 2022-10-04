@@ -16,7 +16,7 @@ services:
       - "./DATA2/omeroZFS/postgre/data/:/data/"
       - "./DATA2/omeroZFS/postgre/wal/:/wal/"
       - "./omero-conf/omero-db.conf:/etc/postgresql/postgresql.conf:ro"
-      - "./DATA2/omeroZFS/logs/postgres/:/log/"
+      - "./DATA2/omeroZFS/logs/postgres/:/log/:Z"
 
   omeroserver:
     build: https://github.com/barrettMCW/docker-omero-serverLLAB.git
@@ -46,7 +46,7 @@ services:
       - "./DATA2/omeroZFS/server/:/OMERO/"
       - "./DATA2/omeroZFS/omeTIFF/:/database/:ro"
       - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
-      - "./DATA2/omeroZFS/logs/server/:/opt/omero/server/OMERO.server/var/log/"
+      - "./DATA2/omeroZFS/logs/server/:/opt/omero/server/OMERO.server/var/log/:Z"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   omeroweb:
@@ -60,21 +60,25 @@ services:
       - "4080"
     volumes:
       - "static:/opt/omero/web/OMERO.web/var/static/"
-      - "./DATA2/omeroZFS/logs/web/:/opt/omero/web/OMERO.web/var/log/"
+      - "./DATA2/omeroZFS/logs/web/:/opt/omero/web/OMERO.web/var/log/:Z"
 
   nginx:
-    image: owasp/modsecurity-crs:nginx-alpine
-    networks:
-      - frontend
+    build: 
+      context: ./nginx/
+      args:
+        - NGINX_VERSION=1.19-alpine-perl
     depends_on:
-      - omeroserver
+      - omeroweb
     ports:
       - "80:80"
       - "443:443"
+    networks:
+      - frontend
     volumes:
       - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
       - "./certs/:/etc/nginx/ssl:ro${VOLOPTS-}"
-      - "./DATA2/omeroZFS/logs/nginx/:/var/log/nginx/"
+      - "./DATA2/omeroZFS/logs/nginx/:/var/log/nginx/:Z"
+      
   redis:
     image: redis:latest
     networks:
@@ -92,7 +96,7 @@ services:
       - "./DATA2/omeroZFS/omeTIFF/:/out/"
       - "./DATA2/omeroZFS/rawTiff/:/archive/"
       - "./DATA2/omeroZFS/failed/:/fail/"
-      - "./DATA2/omeroZFS/logs/pipeline/:/log/"
+      - "./DATA2/omeroZFS/logs/pipeline/:/log/:Z"
 
 networks:
   frontend:
