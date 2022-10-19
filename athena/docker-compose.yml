@@ -1,0 +1,127 @@
+version: "3"
+
+services:
+  database:
+    image: "postgres:14-alpine"
+
+    environment:
+      POSTGRES_DB: omerodatabase
+      POSTGRES_INITDB: /wal/
+      PGDATA: /data/
+      POSTGRES_USER: ${DOA_PG_USER:-pguser}
+      POSTGRES_PASSWORD: ${DOA_PG_PASS:-pgpass}
+
+    networks:
+      - backend
+
+    volumes:
+      - "${DOA_DATA_DIR:-./instance}/postgre/data/:/data/:rw"
+      - "${DOA_DATA_DIR:-./instance}/postgre/wal/:/wal/:rw"
+      - "${DOA_CONF_DIR:-./omero-dev-conf}/omero-db.conf:/etc/postgresql/postgresql.conf:ro"
+      - "${DOA_DATA_DIR:-./instance}/logs/postgres/:/log/:rw"
+
+
+  omeroserver:
+    build: ${DOA_SERVER_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-serverLLAB.git}
+
+    env_file: ${DOA_CONF_DIR:-./omero-dev-conf}/omero-server.env
+
+    environment:
+      #password for root
+      ROOTPASS: ${DOA_OME_ROOT_PASS:-password}
+
+      #password for importer
+      IMPORTPASS: ${DOA_OME_IMPORTER_PASS:-password}
+      #name of importer group should you have a dataset
+      IMPORTGROUP: ${DOA_OME_IMPORTER_GROUP:-groupname}
+
+      #name of postgres container
+      CONFIG_omero_db_host: database
+      #POSTGRES_DB
+      CONFIG_omero_db_name: omerodatabase
+      #POSTGRES_USER
+      CONFIG_omero_db_user: ${DOA_PG_USER:-pguser}
+      #POSTGRES_PASSWORD
+      CONFIG_omero_db_pass: ${DOA_PG_PASS:-pgpass}
+
+    networks:
+      - backend
+      - frontend
+
+    ports:
+      - "4064:4064"
+      - "4066:4066"
+      
+    volumes:
+      - "${DOA_DATA_DIR:-./instance}/server/:/OMERO/:rw"
+      - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/database/:ro"
+      - "${DOA_DATA_DIR:-./instance}/logs/server/:/opt/omero/server/OMERO.server/var/log/:rw"
+      - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+
+  omeroweb:
+    build: ${DOA_WEB_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-webLLAB.git}
+    env_file: ${DOA_CONF_DIR:-./omero-dev-conf}/omero-web.env
+
+    environment:
+      OMEROHOST: omeroserver
+
+    networks:
+      - frontend
+
+    volumes:
+      - "static:/opt/omero/web/OMERO.web/var/static/:rw"
+      - "${DOA_DATA_DIR:-./instance}/logs/web/:/opt/omero/web/OMERO.web/var/log/:rw"
+
+
+  nginx:
+    build: ${DOA_PROXY_DOCKERFILE:-./nginx}
+
+    depends_on:
+      - omeroweb
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    networks:
+      - frontend
+
+    volumes:
+      - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
+      - "./certs/:/etc/nginx/ssl:ro${VOLOPTS-}"
+      - "${DOA_DATA_DIR:-./instance}/logs/nginx/:/var/log/nginx/:rw"
+      
+
+  redis:
+    image: redis:latest
+
+    networks:
+      - frontend
+
+  pipeline:
+    build: ${DOA_PIPE_DOCKERFILE:-https://github.com/LavLabInfrastructure/HistoQCLLAB.git}
+    env_file: ${DOA_CONF_DIR:-./omero-dev-conf}/hqc.env
+
+    volumes:
+      - "${DOA_DATA_DIR:-./instance}/in/BRAIN/:/in/BRAIN/:rw"
+      - "${DOA_DATA_DIR:-./instance}/in/PROSTATE/:/in/PROSTATE/:rw"
+      - "${DOA_DATA_DIR:-./instance}/in/OVERRIDE/:/in/OVERRIDE/:rw"
+      - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/out/:rw"
+      - "${DOA_DATA_DIR:-./instance}/rawTiff/:/archive/:rw"
+      - "${DOA_DATA_DIR:-./instance}/failed/:/fail/:rw"
+      - "${DOA_DATA_DIR:-./instance}/logs/pipeline/:/log/:rw"
+
+
+networks:
+  frontend:
+  backend:
+
+
+#static web files in temp filesys
+volumes:
+  static:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

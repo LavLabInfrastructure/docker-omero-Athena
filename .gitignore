@@ -1,9 +1,6 @@
-DATA2
-certs/*
-dev/certs/*
-omeroserver.env
-omeroweb.env
-hqc.env
-pgzfs.conf
-dev/testData/*
-dev/testResults/*
+athena/certs/*
+athena/omero-conf/omeroserver.env
+athena/omero-conf/omeroweb.env
+athena/omero-conf/hqc.env
+athena/omero-conf/pgzfs.conf
+athena/instance
