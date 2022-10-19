@@ -1,3 +1,4 @@
+.DS_Store
 athena/certs/*
 athena/omero-conf/omeroserver.env
 athena/omero-conf/omeroweb.env
