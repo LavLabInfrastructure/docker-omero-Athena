@@ -61,7 +61,7 @@ services:
 
 
   omeroweb:
-    build: ${DOA_WEB_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-webLLAB.git}
+    build: ${DOA_WEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
     env_file: ${DOA_CONF_DIR:-./omero-dev-conf}/omero-web.env
 
     environment:
