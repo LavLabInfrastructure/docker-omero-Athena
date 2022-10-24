@@ -1,6 +1,6 @@
-athena/certs/*
-athena/omero-conf/omeroserver.env
-athena/omero-conf/omeroweb.env
-athena/omero-conf/hqc.env
-athena/omero-conf/pgzfs.conf
-athena/instance
+omero/certs/*
+omero/omero-conf/omeroserver.env
+omero/omero-conf/omeroweb.env
+omero/omero-conf/hqc.env
+omero/omero-conf/pgzfs.conf
+omero/instance
