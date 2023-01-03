@@ -1,6 +1,7 @@
+omero/.env
 omero/certs/*
-omero/omero-conf/omeroserver.env
-omero/omero-conf/omeroweb.env
+omero/instance
 omero/omero-conf/hqc.env
 omero/omero-conf/pgzfs.conf
-omero/instance
+omero/omero-conf/omeroweb.env
+omero/omero-conf/omeroserver.env

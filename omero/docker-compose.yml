@@ -1,13 +1,13 @@
-version: "3.7"
+version: "3"
 
 services:
-  database:
+  omeropg:
     image: "postgres:14-alpine"
-
     environment:
+      PGDATA: /postgres/data/
+      POSTGRES_INITDB_WALDIR: /postgres/wal/
+
       POSTGRES_DB: omerodatabase
-      POSTGRES_INITDB: /wal/
-      PGDATA: /data/
       POSTGRES_USER: ${DOA_PG_USER:-pguser}
       POSTGRES_PASSWORD: ${DOA_PG_PASS:-pgpass}
 
@@ -15,20 +15,22 @@ services:
       - backend
 
     volumes:
-      - "${DOA_DATA_DIR:-./instance}/postgre/data/:/data/:rw"
-      - "${DOA_DATA_DIR:-./instance}/postgre/wal/:/wal/:rw"
-      - "${DOA_CONF_DIR:-./omero-dev-conf}/omero-db.conf:/etc/postgresql/postgresql.conf:ro"
-      - "${DOA_DATA_DIR:-./instance}/logs/postgres/:/log/:rw"
+      - "${DOA_LOG_DIR:-./instance/logs}/postgres/:/log/"
+      - "${DOA_DATA_DIR:-./instance}/postgres/wal:/postgres/wal"
+      - "${DOA_DATA_DIR:-./instance}/postgres/data:/postgres/data"
+      - "${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeropg/omero-db.conf:/etc/postgresql/postgresql.conf:ro"
 
 
   omeroserver:
     build: ${DOA_SERVER_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-serverLLAB.git}
-
-    env_file: ${DOA_CONF_DIR:-./omero-dev-conf}/omero-server.env
+    env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeroserver/server.env
 
     environment:
       #password for root
       ROOTPASS: ${DOA_OME_ROOT_PASS:-password}
+
+      # takes builtin graphite output and exports to prometheus
+      GRAPHITE_TO_PROMETHEUS: ${GRAPHITE_TO_PROMETHEUS:-true}
 
       #password for importer
       IMPORTPASS: ${DOA_OME_IMPORTER_PASS:-password}
@@ -36,9 +38,9 @@ services:
       IMPORTGROUP: ${DOA_OME_IMPORTER_GROUP:-groupname}
 
       #name of postgres container
-      CONFIG_omero_db_host: database
+      CONFIG_omero_db_host: omeropg
       #POSTGRES_DB
-      CONFIG_omero_db_name: omerodatabase
+      CONFIG_omero_db_name: ${DOA_PG_DB:-omerodatabase}
       #POSTGRES_USER
       CONFIG_omero_db_user: ${DOA_PG_USER:-pguser}
       #POSTGRES_PASSWORD
@@ -53,33 +55,37 @@ services:
       - "4066:4066"
       
     volumes:
-      - "${DOA_DATA_DIR:-./instance}/server/:/OMERO/:rw"
+      # - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${DOA_DATA_DIR:-./instance}/server/:/OMERO/"
+      - "${DOA_CERT_DIR:-./certs/}:/etc/ssl/omero:ro"
       - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/database/:ro"
-      - "${DOA_DATA_DIR:-./instance}/logs/server/:/opt/omero/server/OMERO.server/var/log/:rw"
-      - "./certs:/etc/ssl/omero:ro${VOLOPTS-}"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "${DOA_LOG_DIR:-./instance/logs}/server/:/opt/omero/server/OMERO.server/var/log/"
 
 
   omeroweb:
     build: ${DOA_WEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
-    env_file: ${DOA_CONF_DIR:-./omero-dev-conf}/omero-web.env
+    env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeroweb/web.env
 
     environment:
-      OMEROHOST: omeroserver
+      OMEROHOST: omeroserver 
 
     networks:
       - frontend
 
     volumes:
-      - "static:/opt/omero/web/OMERO.web/var/static/:rw"
-      - "${DOA_DATA_DIR:-./instance}/logs/web/:/opt/omero/web/OMERO.web/var/log/:rw"
+      - "nginx-conf:/etc/nginx/conf.d/"
+      - "omero-static:/opt/omero/web/OMERO.web/var/static/"
+
+      - "${DOA_CONF_DIR:-./configs/omero-dev-conf}/nginx/:/nginx"
+      - "${DOA_LOG_DIR:-./instance/logs}/web:/opt/omero/web/OMERO.web/var/log:rw"
 
 
   nginx:
-    build: ${DOA_PROXY_DOCKERFILE:-./nginx}
+    build: ${DOA_PROXY_DOCKERFILE:-../../nginxLLAB}
 
     depends_on:
-      - omeroweb
+      omeroweb:
+        condition: service_healthy
 
     ports:
       - "80:80"
@@ -89,10 +95,12 @@ services:
       - frontend
 
     volumes:
-      - "static:/opt/omero/nginx/static/:ro${VOLOPTS-}"
-      - "./certs/:/etc/nginx/ssl:ro${VOLOPTS-}"
-      - "${DOA_DATA_DIR:-./instance}/logs/nginx/:/var/log/nginx/:rw"
-      
+      - "omero-static:/opt/static/nginx/omero/:ro"
+      - "nginx-conf:/etc/nginx/conf.d/volume"
+
+      - "${DOA_CERT_DIR:-./certs/}:/etc/nginx/ssl:ro"
+      - "${DOA_LOG_DIR:-./instance/logs}/nginx/:/var/log/nginx/"
+
 
   redis:
     image: redis:latest
@@ -100,18 +108,20 @@ services:
     networks:
       - frontend
 
+
   pipeline:
     build: ${DOA_PIPE_DOCKERFILE:-https://github.com/LavLabInfrastructure/HistoQCLLAB.git}
-    env_file: ${DOA_CONF_DIR:-./omero-dev-conf}/hqc.env
+    env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/pipe.env
 
     volumes:
-      - "${DOA_DATA_DIR:-./instance}/in/BRAIN/:/in/BRAIN/:rw"
-      - "${DOA_DATA_DIR:-./instance}/in/PROSTATE/:/in/PROSTATE/:rw"
-      - "${DOA_DATA_DIR:-./instance}/in/OVERRIDE/:/in/OVERRIDE/:rw"
-      - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/out/:rw"
-      - "${DOA_DATA_DIR:-./instance}/rawTiff/:/archive/:rw"
-      - "${DOA_DATA_DIR:-./instance}/failed/:/fail/:rw"
-      - "${DOA_DATA_DIR:-./instance}/logs/pipeline/:/log/:rw"
+      - "${DOA_IMPORT_DIR:-./instance/in}/in/BRAIN/:/in/BRAIN/"
+      - "${DOA_IMPORT_DIR:-./instance/in}/in/PROSTATE/:/in/PROSTATE/"
+
+      - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/out/"
+      - "${DOA_DATA_DIR:-./instance}/rawTiff/:/archive/"
+
+      - "${DOA_DATA_DIR:-./instance}/failed/:/fail/"
+      - "${DOA_LOG_DIR:-./instance/logs}/pipeline/:/log/"
 
 
 networks:
@@ -119,9 +129,13 @@ networks:
   backend:
 
 
-#static web files in temp filesys
 volumes:
-  static:
+  nginx-conf:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+
+  omero-static:
     driver_opts:
       type: tmpfs
       device: tmpfs

@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+
+  init:
+    build: ./init
+
+    volumes:
+      #postgres
+      - "${DOA_DATA_DIR:-./instance}/logs/postgres/:/postgres/log/"
+      - "${DOA_DATA_DIR:-./instance}/postgres/:/postgres/"
+
+      # omero-server
+      - "${DOA_DATA_DIR:-./instance}/server/:/server/OMERO/"
+      - "${DOA_DATA_DIR:-./instance}/logs/server/:/server/log/"
+      # pipeline belongs to omero-server
+      - "${DOA_DATA_DIR:-./instance}/in:/server/in"
+      - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/server/out/"
+      - "${DOA_DATA_DIR:-./instance}/rawTiff/:/server/archive/"
+      - "${DOA_DATA_DIR:-./instance}/failed/:/server/fail/"
+      - "${DOA_DATA_DIR:-./instance}/logs/pipeline/:/server/pipe-log/"
+
+      # omero-web
+      - "${DOA_DATA_DIR:-./instance}/logs/web:/web/log"
+
+      #nginx
+      - "${DOA_DATA_DIR:-./instance}/logs/nginx/:/nginx/log"
