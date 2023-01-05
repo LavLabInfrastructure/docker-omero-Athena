@@ -1,5 +1,19 @@
 version: "3"
 
+networks:
+  frontend:
+  backend:
+
+volumes:
+  nginx-conf:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  omero-static:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+
 services:
   omeropg:
     image: "postgres:14-alpine"
@@ -55,7 +69,6 @@ services:
       - "4066:4066"
       
     volumes:
-      # - "/var/run/docker.sock:/var/run/docker.sock"
       - "${DOA_DATA_DIR:-./instance}/server/:/OMERO/"
       - "${DOA_CERT_DIR:-./certs/}:/etc/ssl/omero:ro"
       - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/database/:ro"
@@ -109,11 +122,16 @@ services:
       - frontend
 
 
-  pipeline:
+  omerodropbox:
     build: ${DOA_PIPE_DOCKERFILE:-https://github.com/LavLabInfrastructure/HistoQCLLAB.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/pipe.env
-
+    labels:
+      - prometheus-scrape.enabled=true
     volumes:
+      - alert_rules:/etc/prometheus/rules
+      - grafana_provisioning:/etc/grafana/provisioning
+      - ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/:/config
+
       - "${DOA_IMPORT_DIR:-./instance/in}/in/BRAIN/:/in/BRAIN/"
       - "${DOA_IMPORT_DIR:-./instance/in}/in/PROSTATE/:/in/PROSTATE/"
 
@@ -123,19 +141,3 @@ services:
       - "${DOA_DATA_DIR:-./instance}/failed/:/fail/"
       - "${DOA_LOG_DIR:-./instance/logs}/pipeline/:/log/"
 
-
-networks:
-  frontend:
-  backend:
-
-
-volumes:
-  nginx-conf:
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-
-  omero-static:
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
