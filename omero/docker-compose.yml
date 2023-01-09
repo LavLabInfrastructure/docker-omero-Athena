@@ -32,7 +32,7 @@ services:
       - "${DOA_LOG_DIR:-./instance/logs}/postgres/:/log/"
       - "${DOA_DATA_DIR:-./instance}/postgres/wal:/postgres/wal"
       - "${DOA_DATA_DIR:-./instance}/postgres/data:/postgres/data"
-      - "${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeropg/omero-db.conf:/etc/postgresql/postgresql.conf:ro"
+      - "${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeropg/pg.conf:/etc/postgresql/postgresql.conf:ro"
 
 
   omeroserver:
@@ -78,7 +78,8 @@ services:
   omeroweb:
     build: ${DOA_WEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeroweb/web.env
-
+    healthcheck:
+      test: CMD ["curl", "-f", "http://localhost:4080/omero"]
     environment:
       OMEROHOST: omeroserver 
 
@@ -110,9 +111,6 @@ services:
     volumes:
       - "omero-static:/opt/static/nginx/omero/:ro"
       - "nginx-conf:/etc/nginx/conf.d/volume"
-
-      - "${DOA_CERT_DIR:-./certs/}:/etc/nginx/ssl:ro"
-      - "${DOA_LOG_DIR:-./instance/logs}/nginx/:/var/log/nginx/"
 
 
   redis:
