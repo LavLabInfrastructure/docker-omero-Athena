@@ -79,7 +79,7 @@ services:
     build: ${DOA_WEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeroweb/web.env
     healthcheck:
-      test: CMD ["curl", "-f", "http://localhost:4080/omero"]
+      test: CMD ["curl", "-f", "http://localhost:4080"]
     environment:
       OMEROHOST: omeroserver 
 
