@@ -95,7 +95,7 @@ services:
 
 
   nginx:
-    build: ${DOA_PROXY_DOCKERFILE:-../../nginxLLAB}
+    build: ${DOA_PROXY_DOCKERFILE:-https://github.com/LavLabInfrastructure/nginxLLAB.git}
 
     depends_on:
       omeroweb:
