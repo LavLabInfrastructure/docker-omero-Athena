@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.8"
 
 networks:
   frontend:
@@ -78,8 +78,6 @@ services:
   omeroweb:
     build: ${DOA_WEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeroweb/web.env
-    healthcheck:
-      test: CMD ["curl", "-f", "http://localhost:4080"]
     environment:
       OMEROHOST: omeroserver 
 
@@ -96,10 +94,6 @@ services:
 
   nginx:
     build: ${DOA_PROXY_DOCKERFILE:-https://github.com/LavLabInfrastructure/nginxLLAB.git}
-
-    depends_on:
-      omeroweb:
-        condition: service_healthy
 
     ports:
       - "80:80"
