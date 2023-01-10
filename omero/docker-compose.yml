@@ -115,7 +115,7 @@ services:
 
 
   omerodropbox:
-    build: ${DOA_PIPE_DOCKERFILE:-https://github.com/LavLabInfrastructure/HistoQCLLAB.git}
+    build: ${DOA_PIPE_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-dropbox.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/pipe.env
     labels:
       - prometheus-scrape.enabled=true
