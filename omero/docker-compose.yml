@@ -41,7 +41,7 @@ services:
 
 
   omeroweb:
-    build: ${DOA_WEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
+    build: ${OMEROWEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeroweb/web.env
     restart: unless-stopped
 
@@ -65,7 +65,7 @@ services:
 
 
   omerodropbox:
-    build: ${DOA_PIPE_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-dropbox.git}
+    build: ${OMEROPIPE_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-dropbox.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/pipe.env
     restart: unless-stopped
     
@@ -77,8 +77,8 @@ services:
       - grafana_provisioning:/etc/grafana/provisioning
       - ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/:/config
 
-      - "${DOA_IMPORT_DIR:-./instance/in}/in/BRAIN/:/in/BRAIN/"
-      - "${DOA_IMPORT_DIR:-./instance/in}/in/PROSTATE/:/in/PROSTATE/"
+      - "${DOA_IMPORT_DIR:-./instance/in}/BRAIN/:/in/BRAIN/"
+      - "${DOA_IMPORT_DIR:-./instance/in}/PROSTATE/:/in/PROSTATE/"
 
       - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/out/"
       - "${DOA_DATA_DIR:-./instance}/rawTiff/:/archive/"
