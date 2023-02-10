@@ -9,45 +9,38 @@ services:
       test: ["CMD", "curl", "-k", "--http0.9", "https://localhost:4064",]
 
     environment:
-      #password for root
-      ROOTPASS: ${OMERO_ROOT_PASS:-password}
-      #password for importer
-      IMPORTPASS: ${OMERO_IMPORTER_PASS:-password}
-      #name of importer group should you have a dataset
-      IMPORTGROUP: ${OMERO_IMPORTER_GROUP:-groupname}
+      - ROOTPASS=${OMERO_ROOT_PASS:-password}
+      - IMPORTPASS=${OMERO_IMPORTER_PASS:-password}
+      - IMPORTGROUP=${OMERO_IMPORTER_GROUP:-groupname}
 
       # takes builtin graphite output and exports to prometheus 
       # monitoring services not fully implemented yet
       # GRAPHITE_TO_PROMETHEUS: ${GRAPHITE_TO_PROMETHEUS:-true}
 
-      #name of postgres container
-      CONFIG_omero_db_host: postgres
-      #POSTGRES_DB
-      CONFIG_omero_db_name: ${POSTGRES_DB:-omero}
-      #POSTGRES_USER
-      CONFIG_omero_db_user: ${POSTGRES_USER:-omero}
-      #POSTGRES_PASSWORD
-      CONFIG_omero_db_pass: ${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=root
+      - CONFIG_omero_db_host=postgres
+      - CONFIG_omero_db_name=${OMERO_POSTGRES_DB:-omero}
+      - CONFIG_omero_db_user=${POSTGRES_USER:-root}
+      - CONFIG_omero_db_pass=${POSTGRES_PASSWORD:-password}
 
     networks:
       - backend
       - frontend
       
     volumes:
-      - "${DOA_DATA_DIR:-./instance}/server/:/OMERO/"
-      - "${DOA_CERT_DIR:-./certs/}:/etc/ssl/omero:ro"
-      - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/database/:ro"
-      - "${DOA_LOG_DIR:-./instance/logs}/server/:/opt/omero/server/OMERO.server/var/log/"
+      - ${CERT_DIR:-./certs}/omero:/etc/ssl/omero:ro
+      - ${DOA_DATA_DIR:-./instance}/server/:/OMERO/
+      - ${DOA_DATA_DIR:-./instance}/omeTIFF/:/database/:ro
+      - ${LOG_DIR:-./instance/logs}/server/:/opt/omero/server/OMERO.server/var/log/
 
 
   omeroweb:
     build: ${OMEROWEB_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-webLLAB.git}
-    env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/omeroweb/web.env
+    env_file: ${DOA_CONF_DIR:-./configs/omero-conf}/omeroweb/web.env
     restart: unless-stopped
 
     depends_on:
-      omeroserver:
-        condition: service_healthy
+      - omeroserver
     
     environment:
       - OMEROHOST=omeroserver 
@@ -57,54 +50,53 @@ services:
       - frontend
 
     volumes:
-      - "nginx-conf:/etc/nginx/conf.d/"
-      - "omero-static:/opt/omero/web/OMERO.web/var/static/"
-
-      - "${DOA_CONF_DIR:-./configs/omero-dev-conf}/nginx/:/nginx"
-      - "${DOA_LOG_DIR:-./instance/logs}/web:/opt/omero/web/OMERO.web/var/log:rw"
+      - omero-static:/opt/omero/web/OMERO.web/var/static/
+      - ${LOG_DIR:-./instance/logs}/web:/opt/omero/web/OMERO.web/var/log
 
 
   omerodropbox:
     build: ${OMEROPIPE_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-dropbox.git}
-    env_file: ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/pipe.env
+    env_file: ${DOA_CONF_DIR:-./configs/omero-conf}/pipeline/pipe.env
     restart: unless-stopped
     
     labels:
       - prometheus-scrape.enabled=true
 
+    environment:
+      - ENABLE_GRAFANA=true
+
     volumes:
       - alert_rules:/etc/prometheus/rules
       - grafana_provisioning:/etc/grafana/provisioning
-      - ${DOA_CONF_DIR:-./configs/omero-dev-conf}/pipeline/:/config
+      - ${DOA_CONF_DIR:-./configs/omero-conf}/pipeline/:/config
 
       - "${DOA_IMPORT_DIR:-./instance/in}/BRAIN/:/in/BRAIN/"
       - "${DOA_IMPORT_DIR:-./instance/in}/PROSTATE/:/in/PROSTATE/"
 
       - "${DOA_DATA_DIR:-./instance}/omeTIFF/:/out/"
-      - "${DOA_DATA_DIR:-./instance}/rawTiff/:/archive/"
-
-      - "${DOA_DATA_DIR:-./instance}/failed/:/fail/"
-      - "${DOA_LOG_DIR:-./instance/logs}/pipeline/:/log/"
+      - "${LOG_DIR:-./instance/logs}/pipeline/:/log/"
+    
+    networks:
+      - monitoring
 
 
   postgres:
     image: postgres:${PG_VERSION:-12.2-alpine}
     healthcheck: 
-      test: ["CMD", "pg_isready ", "-d ${POSTGRES_DB:-omero}",
-                                  "-U ${POSTGRES_USER:-omero}"]
+      test: ["CMD", "pg_isready"]
     restart: unless-stopped
 
     volumes:
       - ${PG_DATA_DIR:-./instance}/postgres:/postgres
-      - ${DOA_LOG_DIR:-./instance/logs}/postgres/:/log/
+      - ${LOG_DIR:-./instance/logs}/postgres/:/log/
       - ${DOA_CONF_DIR:-./configs/omero-conf}/postgres/pg.conf:/etc/postgresql/postgresql.conf:ro
 
     environment:
       - PGDATA=/postgres/data/
       - POSTGRES_INITDB_WALDIR=/postgres/wal/
       
-      - POSTGRES_DB=${POSTGRES_DB:-xnat}
-      - POSTGRES_USER=${POSTGRES_USER:-xnat}
+      - POSTGRES_DB=root
+      - POSTGRES_USER=${POSTGRES_USER:-root}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
 
     networks:
@@ -122,19 +114,20 @@ services:
         condition: service_healthy
 
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
 
     networks:
       - frontend
 
     volumes:
-      - "omero-static:/opt/static/nginx/omero/:ro"
-      - "nginx-conf:/etc/nginx/conf.d/volume"
+      - omero-static:/opt/static/nginx/omero/:ro
+      - ${CERT_DIR:-./certs}/omero:/etc/ssl/omero:ro
+      - ${DOA_CONF_DIR:-./configs/omero-conf}/nginx/:/etc/nginx/conf.d/omero:ro
 
 
   redis:
-    image: redis:latest
+    image: redis:${REDIS_VERSION:-7.0.8}
     restart: unless-stopped
 
     networks:
@@ -142,6 +135,7 @@ services:
 
 
 networks:
+  monitoring:
   frontend:
   backend:
 
@@ -151,10 +145,6 @@ volumes:
       type: tmpfs
       device: tmpfs
   grafana_provisioning:
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-  nginx-conf:
     driver_opts:
       type: tmpfs
       device: tmpfs
