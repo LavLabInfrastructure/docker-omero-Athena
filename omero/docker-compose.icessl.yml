@@ -6,4 +6,4 @@ services:
   icessl:
     build: ./icessl
     volumes:
-      - "./certs:/icessl:rw${VOLOPTS-}"
+      - "${CERT_DIR:-./certs}/omero/:/icessl:rw${VOLOPTS-}"

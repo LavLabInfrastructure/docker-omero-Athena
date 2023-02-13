@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   omeroserver:
-    build: ${OMEROSERVER_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-serverLLAB.git}
+    build: ${OMEROSERVER_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-serverLLAB.git}
     env_file: ${DOA_CONF_DIR:-./configs/omero-conf}/omeroserver/server.env
     restart: unless-stopped
     healthcheck:
@@ -17,7 +17,7 @@ services:
       # monitoring services not fully implemented yet
       # GRAPHITE_TO_PROMETHEUS: ${GRAPHITE_TO_PROMETHEUS:-true}
 
-      - POSTGRES_DB=root
+      - POSTGRES_DB=${POSTGRES_DB:-root}
       - CONFIG_omero_db_host=postgres
       - CONFIG_omero_db_name=${OMERO_POSTGRES_DB:-omero}
       - CONFIG_omero_db_user=${POSTGRES_USER:-root}
@@ -44,7 +44,6 @@ services:
     
     environment:
       - OMEROHOST=omeroserver 
-      - CONFIG_omero_web_secure=false
   
     networks:
       - frontend
@@ -55,15 +54,12 @@ services:
 
 
   omerodropbox:
-    build: ${OMEROPIPE_DOCKERFILE:-https://github.com/barrettMCW/docker-omero-dropbox.git}
-    env_file: ${DOA_CONF_DIR:-./configs/omero-conf}/pipeline/pipe.env
+    build: ${OMEROPIPE_DOCKERFILE:-https://github.com/LavLabInfrastructure/docker-omero-dropbox.git}
+    env_file: ${DOA_CONF_DIR:-./configs/omero-conf}/omerodropbox/pipe.env
     restart: unless-stopped
     
     labels:
       - prometheus-scrape.enabled=true
-
-    environment:
-      - ENABLE_GRAFANA=true
 
     volumes:
       - alert_rules:/etc/prometheus/rules
@@ -88,14 +84,12 @@ services:
 
     volumes:
       - ${PG_DATA_DIR:-./instance}/postgres:/postgres
-      - ${LOG_DIR:-./instance/logs}/postgres/:/log/
-      - ${DOA_CONF_DIR:-./configs/omero-conf}/postgres/pg.conf:/etc/postgresql/postgresql.conf:ro
 
     environment:
       - PGDATA=/postgres/data/
       - POSTGRES_INITDB_WALDIR=/postgres/wal/
       
-      - POSTGRES_DB=root
+      - POSTGRES_DB=${POSTGRES_DB:-root}
       - POSTGRES_USER=${POSTGRES_USER:-root}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
 
